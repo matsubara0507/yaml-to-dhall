@@ -29,6 +29,7 @@ main = withGetOpt "[options] [input-file]" opts $ \r args ->
   where
     opts = #version @= versionOpt
         <: #verbose @= verboseOpt
+        <: #json    @= jsonOpt
         <: nil
 
 showVersion :: Version -> String

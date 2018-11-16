@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds        #-}
+{-# LANGUAGE MultiWayIf       #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE TypeOperators    #-}
 
@@ -6,6 +7,7 @@ module YamlToDhall.Cmd.Run where
 
 import           RIO
 
+import           Data.Aeson              (decodeFileStrict)
 import           Data.Extensible
 import           Data.Yaml               (decodeFileThrow)
 import           YamlToDhall.Cmd.Options
@@ -18,13 +20,17 @@ run opts = do
   withLogFunc logOpts $ \logger -> do
     let env = #logger @= logger
            <: nil
-    runRIO env $ run' (listToMaybe $ opts ^. #input)
+    runRIO env $ run' (listToMaybe $ opts ^. #input) (opts ^. #json)
 
-run' :: Maybe FilePath -> RIO Env ()
-run' Nothing     = logError "Please input YAML file path"
-run' (Just path) = do
-  txt <- toDhall <$> decodeFileThrow path
-  logInfo $ display txt
+run' :: Maybe FilePath -> Bool -> RIO Env ()
+run' Nothing     _      = logError "Please input YAML file path"
+run' (Just path) isJson = do
+  txt <- if
+    | isJson    -> liftIO $ decodeFileStrict path
+    | otherwise -> pure <$> decodeFileThrow path
+  case txt of
+    Nothing   -> logError "Parse JSON Error"
+    Just txt' -> logInfo $ display (toDhall txt')
 
 showNotImpl :: MonadIO m => m ()
 showNotImpl = hPutBuilder stdout "not yet implement command."
