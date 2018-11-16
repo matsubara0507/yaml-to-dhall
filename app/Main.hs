@@ -19,7 +19,7 @@ import           Data.Extensible.GetOpt
 import           Data.Version           (Version)
 import qualified Data.Version           as Version
 import           Development.GitRev
-import           Lib.Cmd
+import           YamlToDhall.Cmd
 
 main :: IO ()
 main = withGetOpt "[options] [input-file]" opts $ \r args ->

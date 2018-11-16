@@ -2,13 +2,15 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE TypeOperators    #-}
 
-module Lib.Cmd.Run where
+module YamlToDhall.Cmd.Run where
 
 import           RIO
 
 import           Data.Extensible
-import           Lib.Cmd.Options
-import           Lib.Env
+import           Data.Yaml               (decodeFileThrow)
+import           YamlToDhall.Cmd.Options
+import           YamlToDhall.Dhall
+import           YamlToDhall.Env
 
 run :: (MonadUnliftIO m, MonadThrow m) => Options -> m ()
 run opts = do
@@ -16,10 +18,13 @@ run opts = do
   withLogFunc logOpts $ \logger -> do
     let env = #logger @= logger
            <: nil
-    runRIO env run'
+    runRIO env $ run' (listToMaybe $ opts ^. #input)
 
-run' :: RIO Env ()
-run' = showNotImpl
+run' :: Maybe FilePath -> RIO Env ()
+run' Nothing     = logError "Please input YAML file path"
+run' (Just path) = do
+  txt <- toDhall <$> decodeFileThrow path
+  logInfo $ display txt
 
 showNotImpl :: MonadIO m => m ()
 showNotImpl = hPutBuilder stdout "not yet implement command."

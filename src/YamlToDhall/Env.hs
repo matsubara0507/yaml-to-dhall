@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeOperators    #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Lib.Env where
+module YamlToDhall.Env where
 
 import           RIO
 
