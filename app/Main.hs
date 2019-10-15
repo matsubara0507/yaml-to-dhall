@@ -1,42 +1,27 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedLabels      #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE OverloadedLabels  #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Main where
 
 import           Paths_yaml_to_dhall    (version)
 import           RIO
-import qualified RIO.ByteString         as B
 
 import           Data.Extensible
 import           Data.Extensible.GetOpt
-import           Data.Version           (Version)
-import qualified Data.Version           as Version
-import           Development.GitRev
-import           YamlToDhall.Cmd
+import           GetOpt                 (withGetOpt')
+import qualified Version
+import qualified YamlToDhall
 
 main :: IO ()
-main = withGetOpt "[options] [input-file]" opts $ \r args ->
-  case toCmd (#input @= args <: r) of
-    PrintVersion -> B.putStr $ fromString (showVersion version)
-    RunCmd opts' -> run opts'
+main = withGetOpt' "[options] [input-file]" opts $ \r args usage -> if
+  | r ^. #help    -> hPutBuilder stdout (fromString usage)
+  | r ^. #version -> hPutBuilder stdout (Version.build version)
+  | otherwise     -> YamlToDhall.run (#input @= args <: r)
   where
-    opts = #version @= versionOpt
-        <: #verbose @= verboseOpt
-        <: #json    @= jsonOpt
+    opts = #help    @= optFlag ['h'] ["help"] "Show this help text"
+        <: #version @= optFlag [] ["version"] "Show version"
+        <: #verbose @= optFlag ['v'] ["verbose"] "Enable verbose mode: verbosity level \"debug\""
+        <: #json    @= optFlag [] ["json"] "Convert Dhall from JSON instead of YAML"
         <: nil
-
-showVersion :: Version -> String
-showVersion v = unwords
-  [ "Version"
-  , Version.showVersion v ++ ","
-  , "Git revision"
-  , $(gitHash)
-  , "(" ++ $(gitCommitCount) ++ " commits)"
-  ]

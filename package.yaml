@@ -51,14 +51,4 @@ executables:
     source-dirs: app
     dependencies:
     - yaml-to-dhall
-    - gitrev
-
-tests:
-  yaml-to-dhall-test:
-    main: Driver.hs
-    source-dirs: test
-    dependencies:
-    - yaml-to-dhall
-    - tasty
-    - tasty-hspec
-    other-modules: []
+    - githash
