@@ -3,18 +3,28 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE TypeOperators    #-}
 
-module YamlToDhall.Cmd.Run where
+module YamlToDhall
+  ( Options
+  , run
+  ) where
 
 import           RIO
 
-import           Data.Aeson              (decodeFileStrict)
+import           Data.Aeson        (decodeFileStrict)
 import           Data.Extensible
-import           Data.Yaml               (decodeFileThrow)
-import           YamlToDhall.Cmd.Options
+import           Data.Yaml         (decodeFileThrow)
 import           YamlToDhall.Dhall
 import           YamlToDhall.Env
 
-run :: (MonadUnliftIO m, MonadThrow m) => Options -> m ()
+type Options = Record
+  '[ "input"   >: [String]
+   , "help"    >: Bool
+   , "version" >: Bool
+   , "verbose" >: Bool
+   , "json"    >: Bool
+   ]
+
+run :: MonadUnliftIO m => Options -> m ()
 run opts = do
   logOpts <- logOptionsHandle stdout (opts ^. #verbose)
   withLogFunc logOpts $ \logger -> do
@@ -31,6 +41,3 @@ run' (Just path) isJson = do
   case txt of
     Nothing   -> logError "Parse JSON Error"
     Just txt' -> logInfo $ display (toDhall txt')
-
-showNotImpl :: MonadIO m => m ()
-showNotImpl = hPutBuilder stdout "not yet implement command."

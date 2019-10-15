@@ -51,4 +51,4 @@ executables:
     source-dirs: app
     dependencies:
     - yaml-to-dhall
-    - gitrev
+    - githash
