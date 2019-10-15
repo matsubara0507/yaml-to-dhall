@@ -1,3 +1,11 @@
-resolver: lts-12.18
+resolver: lts-14.7
 packages:
 - .
+
+extra-deps:
+- extensible-0.6.1
+- membership-0
+
+docker:
+  repo: matsubara0507/stack-build
+  enable: false
